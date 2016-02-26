@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Home Temperatures with RaspberryPi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="300">
+
+    <!-- Le styles -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="ico/favicon.ico">
+
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+         <div class="navbar-inner">
+           <div class="container-fluid">
+
+             <a class="brand" href="index.html">Home Temperatures</a>
+             
+             <div class="nav-collapse collapse">
+               <ul class="nav">
+                 <!-- <li class="active"><a href="index.html">Home</a></li> -->
+                 <li><a href="howto.html">HowTo</a></li>
+                 <!-- <li><a href="#contact">Contact</a></li> -->
+               </ul>
+             </div>
+             
+           </div>
+         </div>
+       </div>
+
+       <div class="container-fluid">
+         <div class="row-fluid">
+           <div class="span2">
+             <div class="well sidebar-nav">
+               <ul class="nav nav-list">
+                 <li class="nav-header">Temperature</li>
+                  <li><a href="index.html?3h">Last 3h</a></li>
+                  <li><a href="index.html">Last 24h</a></li>
+                  <li><a href="index.html?48h">Last 2 Days</a></li>
+                  <li><a href="index.html?1w">Last Week</a></li>
+                  <li><a href="index.html?1m">Last Month</a></li>
+                  <li><a href="index.html?3m">Last 3 Month</a></li>
+                  <li><a href="index.html?1y">Last Year</a></li>
+               </ul>
+             </div><!--/.well -->
+           </div><!--/span-->
+           <div class="span10">
+             <div id="content"></div>
+             <hr>
+             <div id="weather" style="margin-left: 20px;"></div>
+           </div><!--/span-->
+         </div><!--/row-->
+
+         <hr>
+
+         <footer>
+           <p>Based on Warl0rd's work at http://warlord.no-ip.com/</p>
+         </footer>
+
+       </div><!--/.fluid-container-->
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highcharts/2.3.5/highcharts.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.simpleWeather/2.3.0/jquery.simpleWeather.min.js"></script>
+    <script type="text/javascript" src="chart.min.js" charset="utf-8"></script>
+    <script type="text/javascript">
+      $(document).ready(function(){
+
+        $.ajax({
+          type: "GET",
+          url: GetChartXml(),
+          dataType: "xml",
+          success: function(xml) {
+            var series = []
+
+            //define series
+            $(xml).find("entry").each(function() {
+              var seriesOptions = {
+                name: $(this).text(),
+                data: []
+              };
+              options.series.push(seriesOptions);
+            });
+
+            //populate with data
+            $(xml).find("row").each(function()
+            {
+                var t = parseInt($(this).find("t").text())*1000
+
+                $(this).find("v").each(function(index){
+                    var v = parseFloat($(this).text())
+                    v = v || null
+                    if (v != null) {
+                      options.series[index].data.push([t,v])
+                    };
+                });
+            });
+            options.title.text = GetChartTitle();
+            $.each(series, function(index) {
+              options.series.push(series[index]);
+            });
+            //add sunrise and sunset
+            options.xAxis.plotBands = []
+            for (var i = GetBandsNumber(); i >= 0; i--) {
+              var d = new Date();
+              d.setHours(0,0,0,0);
+              d.setDate(d.getDate()-i);
+              var sunrise = d.getTime()+computeSunrise(dayOfYear(), true);
+              var sunset = d.getTime()+computeSunrise(dayOfYear(), false);
+              options.xAxis.plotBands.push({
+                from: sunrise,
+                to: sunset,
+                color: '#FCFFC5'
+              });
+            };
+            chart = new Highcharts.Chart(options);
+          }
+        });
+
+    });
+
+    $.simpleWeather({
+        woeid: '1098081', // Perth, Western Australia. Got from http://woeid.rosselliot.co.nz/lookup
+        unit: 'c',
+        success: function(weather) {
+            html = '<h3>'+weather.city+', '+weather.country+'</h3>';
+            html += '<img style="float:left; margin-top: 10px;" width="125px" src="'+weather.image+'">';
+            html += '<p>'+weather.temp+'&deg; '+weather.units.temp+'<br /><span>'+weather.currently+'</span></p>';
+            html += '<p>High: '+weather.high+'&deg; Low: '+weather.low+'&deg;<br />';
+            html += 'Wind: '+weather.wind.direction+' '+weather.wind.speed+' '+weather.units.speed+'</p>';
+
+            $("#weather").html(html);
+        },
+        error: function(error) {
+            $("#weather").html('<p>'+error+'</p>');
+        }
+    });
+
+    </script>
+</body>
+</html>
