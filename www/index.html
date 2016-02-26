@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Home Temperatures with RaspberryPi</title>
+    <title>Shed Temperatures with RaspberryPi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="300">
 
@@ -33,7 +33,7 @@
          <div class="navbar-inner">
            <div class="container-fluid">
 
-             <a class="brand" href="index.html">Home Temperatures</a>
+             <a class="brand" href="index.html">Shed Temperatures</a>
              
              <div class="nav-collapse collapse">
                <ul class="nav">
@@ -84,7 +84,7 @@
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/highcharts/2.3.5/highcharts.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jquery.simpleWeather/2.3.0/jquery.simpleWeather.min.js"></script>
-    <script type="text/javascript" src="chart.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="main.js" charset="utf-8"></script>
     <script type="text/javascript">
       $(document).ready(function(){
 
@@ -121,21 +121,28 @@
             $.each(series, function(index) {
               options.series.push(series[index]);
             });
-            //add sunrise and sunset
-            options.xAxis.plotBands = []
-            for (var i = GetBandsNumber(); i >= 0; i--) {
-              var d = new Date();
-              d.setHours(0,0,0,0);
-              d.setDate(d.getDate()-i);
-              var sunrise = d.getTime()+computeSunrise(dayOfYear(), true);
-              var sunset = d.getTime()+computeSunrise(dayOfYear(), false);
-              options.xAxis.plotBands.push({
-                from: sunrise,
-                to: sunset,
-                color: '#FCFFC5'
-              });
-            };
-            chart = new Highcharts.Chart(options);
+
+                //add sunrise and sunset
+                var no_sun = ['1yminmax', '1y', '3m'];
+                if ($.inArray(urlParameter, no_sun) == -1) {
+                    options.xAxis.plotBands = []
+                    for (var i = 31; i >= 0; i--) {
+                        var d = new Date();
+                        d.setHours(0, 0, 0, 0);
+                        d.setDate(d.getDate() - i);
+                        var sunrise = d.getTime() + computeSunrise(dayOfYear(), true);
+                        var sunset = d.getTime() + computeSunrise(dayOfYear(), false);
+                        options.xAxis.plotBands.push({
+                            from: sunrise,
+                            to: sunset,
+                            color: '#FCFFC5'
+                        });
+                    }
+                    ;
+                }
+                ;
+                var chart = new Highcharts.Chart(options);
+
           }
         });
 
